@@ -1,0 +1,2 @@
+# Klikz-Store
+Shopify website
