@@ -1,86 +1,95 @@
 <div class="featured-blog featured-blog--{{ section.id }}" data-section-id="{{ section.id }}" data-section-type="featured-blog">
-  <div class="wrapper">
 
-    {%- assign blog = blogs[section.settings.blog] -%}
-
-    {% case section.settings.post_limit %}
-      {% when 3 %}
-        {%- assign width = 'small--one-whole medium--one-half large--one-third' -%}
-      {% when 2 %}
-        {%- assign width = 'small--one-whole medium--one-half large--one-half' -%}
-      {% when 1 %}
-        {% if section.settings.blog_show_image %}
-          {%- assign width = 'small--one-whole medium--one-half large--one-half' -%}
-        {% else %}
-          {%- assign width = 'text-center large--four-fifths push--large--one-tenth' -%}
-        {% endif %}
-      {% else %}
-        {%- assign width = 'small--one-whole medium--one-half large--one-third' -%}
-    {% endcase %}
-
+  <div class="page-width">
     {% if section.settings.title != blank %}
-      <div class="section-header text-center">
-        <h2 class="h1 section-header__title">{{ section.settings.title | escape }}</h2>
-        <hr class="hr--small">
-      </div>
+      <h2 class="featured-blog__heading section-header__title text-center" data-animate>{{ section.settings.title | escape }}</h2>
     {% endif %}
 
-    {% unless blog.articles_count == 0 %}
-      <div class="grid-uniform">
-        {% for article in blog.articles limit: section.settings.post_limit %}
-          <div class="grid__item {{ width }}">
-            <div class="featured-blog__post">
+    {%- assign blog = blogs[section.settings.blog] -%}
+    {%- assign mobileColumns = 1 -%}
 
-              {% if section.settings.blog_show_image %}
-                {% unless article.image == blank %}
-                  <a class="article__featured-image-link" href="{{ article.url }}">
-                    <noscript>
-                      {{ article.image | img_url: '1024x1024' | img_tag: article.title | escape }}
-                    </noscript>
-                    <div class="article__featured-image-wrapper" style="padding-top:{{ 1 | divided_by: article.image.aspect_ratio | times: 100}}%;">
-                      {% assign img_url = article.image | img_url: '1x1' | replace: '_1x1.', '_{width}x.' %}
-                      <img class="article__featured-image lazyload"
-                        src="{{ article.image | img_url: '300x300' }}"
-                        data-src="{{ img_url }}"
-                        data-widths="[310, 360, 480, 540, 720, 900, 1080, 1296, 1512, 1728, 2048]"
-                        data-aspectratio="{{ article.image.aspect_ratio }}"
-                        data-sizes="auto"
-                        alt="{{ article.title | escape }}">
+    {% unless blog.articles.size == 1 %}
+      {% case section.settings.post_limit %}
+        {% when 3 %}
+          {%- assign desktopColumns = 3 -%}
+          {%- assign width = 'medium-up--one-third' -%}
+        {% when 2 %}
+          {%- assign desktopColumns = 2 -%}
+          {%- assign width = 'medium-up--one-half' -%}
+        {% when 1 %}
+          {%- assign desktopColumns = 1 -%}
+          {%- assign width = 'one-whole' -%}
+        {% else %}
+          {%- assign desktopColumns = 3 -%}
+          {%- assign width = 'medium-up--one-third' -%}
+      {% endcase %}
+    {% endunless %}
+
+    {% capture emptyBlog %}
+      <div class="card-list grid" data-desktop-columns="{{ desktopColumns }}" data-mobile-columns="{{ mobileColumns }}">
+        <div class="card-list__column grid__item {{ width }}{% if mobileColumns == 2 %} small--one-half{% endif %}">
+          {% for i in (1..section.settings.post_limit)  %}
+            <div class="card critical-clear" data-animate>
+              <a class="card__wrapper card--article">
+                {% if section.settings.blog_show_image %}
+                  {% if section.settings.post_limit == 1 %}
+                    <div class="medium-up--one-half card-list__column--half-left">
+                  {% endif %}
+                  <div class="card__image-wrapper">
+                    {% capture current %}{% cycle 1, 2, 3, 4, 5, 6 %}{% endcapture %}
+                    {{ 'collection-' | append: current | placeholder_svg_tag: 'placeholder-svg' }}
+                  </div>
+                  {% if section.settings.post_limit == 1 %}
                     </div>
-                  </a>
-                {% endunless %}
-              {% endif %}
-
-              {% unless section.settings.post_limit == 1 and section.settings.blog_show_image %}
-                {% include 'featured-blog', article: article %}
-              {% endunless %}
-
+                  {% endif %}
+                  {% if blog.articles.size == 1 or section.settings.post_limit == 1 %}
+                    <div class="medium-up--one-half card-list__column--half-right">
+                  {% endif %}
+                {% endif %}
+                <div class="card__info">
+                  <h2 class="card__name h4">{{ 'homepage.onboarding.blog_title' | t }}</h2>
+                  {% if section.settings.blog_show_excerpt %}
+                    <div class="card__excerpt rte">
+                      {{ 'homepage.onboarding.blog_excerpt' | t }}
+                    </div>
+                  {% endif %}
+                  <span class="card__read-more">
+                    {{ 'blogs.article.read_more' | t }}
+                    {% include 'icon-arrow-right' %}
+                  </span>
+                </div>
+                {% if section.settings.blog_show_image %}
+                  {% if blog.articles.size == 1 or section.settings.post_limit == 1 %}
+                    </div>
+                  {% endif %}
+                {% endif %}
+              </a>
             </div>
-          </div>
-
-          {% if section.settings.post_limit == 1 and section.settings.blog_show_image %}
-            <div class="grid__item {{ width }}">
-              <div class="featured-blog__post">
-                 {% include 'featured-blog', article: article %}
-              </div>
-            </div>
-          {% endif %}
-
-        {% endfor %}
+          {% endfor %}
+        </div>
       </div>
+    {% endcapture %}
 
+    {% unless blog.articles_count == 0 %}
+      <div class="card-list grid" data-desktop-columns="{{ desktopColumns }}" data-mobile-columns="{{ mobileColumns }}" data-grid-style="{{ section.settings.grid_style }}">
+        <div class="card-list__column grid__item {{ width }}{% if mobileColumns == 2 %} small--one-half{% endif %}">
+          {% for article in blog.articles limit: section.settings.post_limit %}
+            {% include 'featured-article-card', article: article, grid_style: section.settings.grid_style %}
+          {% endfor %}
+        </div>
+      </div>
     {% else %}
-      {% include 'onboarding-featured-blog' %}
+      {{ emptyBlog }}
     {% endunless %}
 
     {% if blog == empty %}
-      {% include 'onboarding-featured-blog' %}
+      {{ emptyBlog }}
     {% endif %}
 
     {% if section.settings.show_view_all %}
-      <div class="section-header text-center">
-        <a href="{{ blog.url }}" class="btn">
-          {{ 'blogs.article.view_all' | t }}
+      <div class="featured-blog__view-all">
+        <a href="{{ blog.url }}" class="btn{% if section.settings.use_second_button %} btn--secondary{% endif %}">
+          {{ 'collections.general.view_all' | t }}
         </a>
       </div>
     {% endif %}
@@ -88,13 +97,11 @@
   </div>
 </div>
 
-
-
 {% schema %}
 {
   "name": {
     "da": "Blogopslag",
-    "de": "Blog-Beiträge",
+    "de": "Blogposts",
     "en": "Blog posts",
     "es": "Entradas del blog",
     "fi": "Blogijulkaisut",
@@ -112,13 +119,14 @@
     "zh-CN": "博客文章",
     "zh-TW": "部落格文章"
   },
+  "class": "index-section",
   "settings": [
     {
       "type": "text",
       "id": "title",
       "label": {
         "da": "Overskrift",
-        "de": "Überschrift",
+        "de": "Titel",
         "en": "Heading",
         "es": "Título",
         "fi": "Otsake",
@@ -186,11 +194,11 @@
       "id": "post_limit",
       "label": {
         "da": "Opslag",
-        "de": "Beiträge",
+        "de": "Posts",
         "en": "Posts",
-        "es": "publicaciones",
+        "es": "Publicaciones",
         "fi": "Julkaisut",
-        "fr": "Articles de blog",
+        "fr": "Articles",
         "hi": "पोस्ट",
         "it": "Articoli",
         "ja": "投稿",
@@ -208,6 +216,79 @@
       "max": 3,
       "step": 1,
       "default": 3
+    },
+    {
+      "type": "select",
+      "id": "grid_style",
+      "label": {
+        "da": "Gittertypografi",
+        "de": "Rasterstil",
+        "en": "Grid style",
+        "es": "Estilo de cuadrícula",
+        "fi": "Ruudukon tyyli",
+        "fr": "Style de grille",
+        "hi": "ग्रिड स्टाइल",
+        "it": "Stile griglia",
+        "ja": "グリッドスタイル",
+        "ko": "그리드 스타일",
+        "nb": "Rutenettstil",
+        "nl": "Rasterstijl",
+        "pt-BR": "Estilo da grade",
+        "pt-PT": "Estilo da grelha",
+        "sv": "Rutnätsstil",
+        "th": "รูปแบบกริด",
+        "zh-CN": "网格样式",
+        "zh-TW": "網格樣式"
+      },
+      "default": "collage",
+      "options": [
+        {
+          "value": "collage",
+          "label": {
+            "da": "Collage",
+            "de": "Collage",
+            "en": "Collage",
+            "es": "Collage",
+            "fi": "Kollaasi",
+            "fr": "Collage",
+            "hi": "कोल्लाज",
+            "it": "Collage",
+            "ja": "コラージュ",
+            "ko": "콜라주",
+            "nb": "Fotomontasje",
+            "nl": "Collage",
+            "pt-BR": "Colagem",
+            "pt-PT": "Colagem",
+            "sv": "Kollage",
+            "th": "ภาพตัดแปะ",
+            "zh-CN": "拼贴画",
+            "zh-TW": "拼貼"
+          }
+        },
+        {
+          "value": "grid",
+          "label": {
+            "da": "Gitter",
+            "de": "Raster",
+            "en": "Grid",
+            "es": "Cuadrícula",
+            "fi": "Ruudukko",
+            "fr": "Grille",
+            "hi": "ग्रिड",
+            "it": "Griglia",
+            "ja": "グリッド",
+            "ko": "그리드",
+            "nb": "Rutenett",
+            "nl": "Raster",
+            "pt-BR": "Grade",
+            "pt-PT": "Grelha",
+            "sv": "Rutnät",
+            "th": "กริด",
+            "zh-CN": "网格",
+            "zh-TW": "網格"
+          }
+        }
+      ]
     },
     {
       "type": "checkbox",
@@ -239,7 +320,7 @@
       "id": "blog_show_author",
       "label": {
         "da": "Vis forfatter",
-        "de": "Verfasser anzeigen",
+        "de": "Autor anzeigen",
         "en": "Show author",
         "es": "Mostrar autor",
         "fi": "Näytä tekijä",
@@ -314,23 +395,48 @@
       "id": "show_view_all",
       "label": {
         "da": "Vis knappen \"Se flere\"",
-        "de": "Schaltfläche \"Alle anzeigen\" anzeigen",
+        "de": "'Alle anzeigen' Button anzeigen",
         "en": "Show 'View all' button",
         "es": "Mostrar el botón 'Ver todo'",
         "fi": "Näytä \"Näytä kaikki\" -painike",
         "fr": "Afficher le bouton « Tout afficher »",
         "hi": "'सभी देखें' बटन दिखाएं",
         "it": "Mostra il pulsante \"Visualizza tutto\"",
-        "ja": "「すべて表示」ボタンを表示する",
+        "ja": "[すべて表示] ボタンを表示する",
         "ko": "'모두 보기' 버튼 표시",
         "nb": "Vis «Se alle»-knapp",
         "nl": "Knop 'Alles weergeven' weergeven",
         "pt-BR": "Exibir botão 'Visualizar tudo'",
-        "pt-PT": "Mostrar botão 'Ver tudo'",
+        "pt-PT": "Mostrar botão \"Ver tudo\"",
         "sv": "Visa \"Visa alla\"-knappen",
         "th": "แสดงปุ่ม 'ดูทั้งหมด'",
         "zh-CN": "显示“查看全部”按钮",
         "zh-TW": "顯示「檢視全部」按鈕"
+      },
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "use_second_button",
+      "label": {
+        "da": "Brug sekundær knaptypografi",
+        "de": "Stil für sekundäre Schaltflächen verwenden",
+        "en": "Use secondary button style",
+        "es": "Utiliza el estilo de botón secundario",
+        "fi": "Käytä toissijaista painikkeen tyyliä",
+        "fr": "Utiliser le style de bouton secondaire",
+        "hi": "द्वितीयक बटन स्टाइल का उपयोग करें",
+        "it": "Usa stile pulsante secondario",
+        "ja": "サブボタンのスタイルを使用する",
+        "ko": "보조 버튼 스타일 사용",
+        "nb": "Bruk sekundær knappestil",
+        "nl": "Secundaire knopstijl gebruiken",
+        "pt-BR": "Usar o estilo de botão secundário",
+        "pt-PT": "Utilizar estilo de botão secundário",
+        "sv": "Använd sekundärknappsstil",
+        "th": "ใช้รูปแบบปุ่มรอง",
+        "zh-CN": "使用辅助按钮样式",
+        "zh-TW": "使用次要按鈕樣式"
       },
       "default": false
     }
@@ -339,7 +445,7 @@
     {
       "name": {
         "da": "Blogopslag",
-        "de": "Blog-Beiträge",
+        "de": "Blogposts",
         "en": "Blog posts",
         "es": "Entradas del blog",
         "fi": "Blogijulkaisut",
